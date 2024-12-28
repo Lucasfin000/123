@@ -2674,30 +2674,9 @@ function Nezur.isscriptable(object, property)
 end
 
 		local function sethiddenproperty(instance, propertyName, value)
-    -- Validate the input types
-    if typeof(instance) ~= "Instance" then
-        error("[sethiddenproperty] First argument must be an Instance.", 2)
-    end
-    if typeof(propertyName) ~= "string" then
-        error("[sethiddenproperty] Second argument must be a string.", 2)
-    end
 
-    -- Attempt to set the hidden property
-    local success, result = pcall(function()
-        return old_game:SetHiddenProperty(instance, propertyName, value)
-    end)
-
-    -- If setting the hidden property fails, handle the error
-    if not success then
-        error("[sethiddenproperty] Failed to set hidden property: " .. tostring(result), 2)
-    end
-
-    -- Always return nil
     return nil
 end
-
--- Expose the function to the global environment
-_G.sethiddenproperty = sethiddenproperty
 
 
 -------------------------------------------------------------------------------
