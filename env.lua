@@ -2304,6 +2304,57 @@ function Nezur.gethiddenproperty(a, b)
 	return 5, true
 end
 
+local cacheData = {}
+
+function cache.invalidate(obj)
+    if typeof(obj) == "Instance" then
+        obj:Destroy()
+        cacheData[obj] = nil
+    else
+    end
+end
+
+function cache.iscached(obj)
+    if typeof(obj) == "Instance" then
+        return cacheData[obj] ~= nil
+    else
+        return false
+    end
+end
+
+function cache.replace(oldObj, newObj)
+    if typeof(oldObj) == "Instance" and typeof(newObj) == "Instance" then
+        if cacheData[oldObj] then
+            cacheData[oldObj] = nil
+            cacheData[newObj] = true
+        end
+    end
+end
+local callbackValues = {}
+
+function getcallbackvalue(instance, propertyName)
+    if callbackValues[instance] and callbackValues[instance][propertyName] then
+        return callbackValues[instance][propertyName]
+    end
+    return nil
+end
+local hookedFunctions = {}
+
+function hookfunction(originalFunc, newFunc)
+    if hookedFunctions[originalFunc] then
+        return nil, "Function is already hooked"
+    end
+    
+    local hookedFunc = function(...)
+        return newFunc(...)
+    end
+    
+    hookedFunctions[originalFunc] = hookedFunc
+    
+    return function()
+        return originalFunc()
+    end
+end
 function sethiddenproperty(instance, propertyName, value)
     if typeof(instance) ~= "Instance" then
         error("Invalid instance provided")
