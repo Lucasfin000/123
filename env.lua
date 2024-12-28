@@ -2672,22 +2672,6 @@ function Nezur.isscriptable(object, property)
 	end
 	return false
 end
-
-		local function sethiddenproperty(instance, propertyName, value)
-    -- Check for invalid inputs and give error messages
-    if typeof(instance) ~= "Instance" then
-        error("Invalid instance provided")
-    end
-    if type(propertyName) ~= "string" then
-        error("Property name must be a string")
-    end
-
-    -- Ignore the actual setting logic and always return nil
-    return nil
-end
-
-
-
 -------------------------------------------------------------------------------
 -------------------------------------------------------------------------------
 
