@@ -2411,26 +2411,7 @@ function Nezur.debug.getinfo(f, options)
 	end
 	return result
 end
-function Nezur.sethiddenproperty(instance, property_name, value)
-    assert(typeof(instance) == "Instance", `arg #1 must be type Instance`)
-    assert(type(property_name) == "string", `arg #2 must be type string`)
 
-    -- TODO If we can't figure out how to setscriptable and access property in lua without crashing then just bridge this function entirely
-
-    -- local was_scriptable = script_env.setscriptable(instance, property_name, true)
-    -- local o, err = pcall(function()
-    --     instance[property_name] = value
-    -- end)
-    -- if not was_scriptable then
-    --     script_env.setscriptable(instance, property_name, was_scriptable)
-    -- end
-    -- if o then
-    --     return was_scriptable
-    -- else
-    --     error(err, 2)
-    -- end
-end
-		
 function Nezur.debug.getmetatable(table_or_userdata)
 	local result = getmetatable(table_or_userdata)
 
