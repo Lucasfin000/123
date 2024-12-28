@@ -2838,7 +2838,23 @@ function Nezur.isscriptable(object, property)
 	end
 	return false
 end
+local scriptableProperties = {}
 
+function setscriptable(instance, property, scriptable)
+    if not scriptableProperties[instance] then
+        scriptableProperties[instance] = {}
+    end
+    
+    local wasScriptable = scriptableProperties[instance][property] or false
+    
+    scriptableProperties[instance][property] = scriptable
+    
+    return wasScriptable
+end
+
+function isscriptable(instance, property)
+    return scriptableProperties[instance] and scriptableProperties[instance][property] or false
+end
 		
 -------------------------------------------------------------------------------
 -------------------------------------------------------------------------------
