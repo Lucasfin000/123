@@ -2304,6 +2304,17 @@ function Nezur.gethiddenproperty(a, b)
 	return 5, true
 end
 
+function sethiddenproperty(instance, propertyName, value)
+    if typeof(instance) ~= "Instance" then
+        error("Invalid instance provided")
+    end
+    if type(propertyName) ~= "string" then
+        error("Property name must be a string")
+    end
+    
+    instance:SetAttribute(propertyName, value)
+end
+
 function Nezur.gethui()
 	return Nezur.cloneref(workspace.Parent:FindService("CoreGui"))
 end
@@ -2672,6 +2683,8 @@ function Nezur.isscriptable(object, property)
 	end
 	return false
 end
+
+		
 -------------------------------------------------------------------------------
 -------------------------------------------------------------------------------
 
