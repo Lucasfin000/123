@@ -2687,16 +2687,18 @@ end
         return old_game:SetHiddenProperty(instance, propertyName, value)
     end)
 
-    -- Handle errors or return success
+    -- If setting the hidden property fails, handle the error
     if not success then
         error("[sethiddenproperty] Failed to set hidden property: " .. tostring(result), 2)
     end
 
-    return result
+    -- Always return nil
+    return nil
 end
 
 -- Expose the function to the global environment
 _G.sethiddenproperty = sethiddenproperty
+
 
 -------------------------------------------------------------------------------
 -------------------------------------------------------------------------------
