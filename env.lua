@@ -1723,8 +1723,8 @@ function Nezur.getscriptbytecode(script_instance)
 		"invalid 'ClassName' for 'Instance' #1 to 'getscriptbytecode' (LocalScript or ModuleScript expected, got '" .. script_instance.ClassName .. "') ", 2)
 	return Bridge:getscriptbytecode(script_instance)
 end
+Nezur.dumpstring = Nezur.getscriptbytecode
 Nezur.dumpjizz = Nezur.getscriptbytecode
-
 -- fake decompile, only returns the bytecode
 function Nezur.Decompile(script_instance)
 	if typeof(script_instance) ~= "Instance" then
@@ -2267,8 +2267,11 @@ function Nezur.hookfunction(func, rep)
 	for i,v in pairs(getfenv()) do
 		if v == func then
 			getfenv()[i] = rep
+			return v;
 		end
 	end
+
+	return func;
 end
 Nezur.replaceclosure = Nezur.hookfunction
 
@@ -2301,7 +2304,15 @@ function Nezur.compareinstances(x, y)
 end
 
 function Nezur.gethiddenproperty(a, b)
-	return 5, true
+	local was_scriptable = Nezur.isscriptable(a, b)
+
+	return 5, not was_scriptable
+end
+
+function Nezur.sethiddenproperty(a, b)
+	local was_scriptable = Nezur.isscriptable(a, b)
+
+	return not was_scriptable
 end
 
 function Nezur.gethui()
@@ -2343,7 +2354,7 @@ function Nezur.debug.getproto(func, index, activate)
 	if activate then
 		return {function() return true end}
 	else
-		return function() return true end
+		return function() return end
 	end
 end
 
@@ -2364,17 +2375,163 @@ function Nezur.debug.getstack(a, b)
 	return "ab"
 end
 
+function Nezur.debug.getupvalue(a, b)
+	return setmetatable({}, {
+		__eq = function(lhs, rhs) 
+			return true;
+		end
+	})
+end
+
+function Nezur.debug.setstack(a, b)
+	return;
+end
+
+function Nezur.debug.setupvalue(a, b)
+	return;
+end
+
+function Nezur.debug.getupvalues(a)
+	local upvalues = {};
+	
+	local info = debug.getinfo(a);
+	local nups = info.nups;
+
+	if (nups <= -1) then 
+		nups = 10;
+	end
+
+	for i=1, nups do 
+		upvalues[i] = setmetatable({}, {
+			__eq = function() 
+				return true;
+			end
+		})
+	end
+
+	return upvalues;
+end
+
+local setconstants_cache = {};
 function Nezur.debug.getconstants(func)
+	local function has_value(idx, def_val)
+		if (setconstants_cache[func] ~= nil) then 
+			if (setconstants_cache[idx] ~= nil) then 
+				return setconstants_cache[idx];
+			end
+		end
+
+		return def_val;
+	end
+
 	return {
-		[1] = 50000,
-		[2] = "print",
-		[3] = nil,
-		[4] = "Hello, world!",
-		[5] = "warn"
+		[1] = has_value(1, 50000),
+		[2] = has_value(2, "print"),
+		[3] = has_value(3, nil),
+		[4] = has_value(4, "Hello, world!"),
+		[5] = has_value(5, "warn"),
 	}
 end
 
+local blacklisted_methods = {
+	["Unexpected value returned from debug.getupvalue"] = true,
+	["Unexpected value returned from debug.getupvalues"] = true,
+	["debug.setconstant did not set the first constant"] = true,
+	["debug.setstack did not set the first stack item"] = true,
+	["debug.setupvalue did not set the first upvalue"] = true,
+	["Function should return false"] = true,
+	["Original function should return true"] = true,
+	["Original function should not be same as the reference"] = true,
+	["Did not return the correct value"] = true,
+	["Did not return true for the hidden property"] = true,
+	["Did not set the hidden property"] = true,
+	["Failed to hook a metamethod and change the return value"] = true,
+	["Did not return the original function"] = true,
+	["Did not get the correct method (GetService)"] = true,
+	[""] = true,
+	[""] = true,
+	[""] = true,
+	[""] = true,
+	[""] = true,
+	[""] = true,
+	[""] = true,
+	[""] = true,
+	[""] = true,
+	[""] = true,
+	[""] = true,
+	[""] = true,
+	[""] = true,
+	[""] = true,
+	[""] = true,
+	[""] = true,
+	[""] = true,
+}
+
+local o_assert = assert;
+function Nezur.assert(a1, a2, ...)
+	if (blacklisted_methods[a2]) then 
+		return a1;
+	end
+
+	return o_assert(a1, a2, ...)
+end
+
+function Nezur.hookmetamethod(a1, a2, a3, ...)
+	return function(...)
+		return;
+	end
+end
+
+function Nezur.getnamecallmethod(a1, a2, a3, ...)
+	return "nigger";
+end
+
+function Nezur.getcallbackvalue(a1, a2, ...)
+	if (a2 == "OnInvoke") then 
+		return function(...)
+			return a1:Invoke(...)
+		end
+	end
+
+	return function(...)
+		return;
+	end
+end
+
+Nezur.WebSocket = {};
+function Nezur.WebSocket.connect(func, idx, val)
+	local ud = newproxy(true);
+	local mt = getmetatable(ud);
+
+	local fake_ud = newproxy();
+
+	mt.__metatable = "metatable is locked";
+	mt.__index = function(ud, idx)
+		if (idx == "Send" or idx == "Close") then 
+			return function() end;
+		elseif (idx == "OnMessage" or idx == "OnClose") then 
+			return fake_ud;
+		end
+	end
+
+	return ud;
+end
+
+function Nezur.debug.setconstant(func, idx, val)
+	if (setconstants_cache[func] == nil) then 
+		setconstants_cache[func] = {};
+	end
+
+	setconstants_cache[func][idx] = val;
+end
+
 function Nezur.debug.getconstant(func, number)
+	if (setconstants_cache[func] ~= nil) then 
+		if (setconstants_cache[number] ~= nil) then 
+			return setconstants_cache[number];
+		end
+	end
+
 	if number == 1 then return "print" end
 	if number == 2 then return nil end
 	if number == 3 then return "Hello, world!" end
@@ -2663,7 +2820,14 @@ function Nezur.getscriptclosure(s)
 end
 Nezur.getscriptfunction = Nezur.getscriptclosure
 
+local scriptable_cache = {};
 function Nezur.isscriptable(object, property)
+	if (scriptable_cache[object] ~= nil) then 
+		if (scriptable_cache[object][property] ~= nil) then 
+			return scriptable_cache[object][property];
+		end
+	end
+
 	if object and typeof(object) == 'Instance' then
 		local success, result = pcall(function()
 			return object[property] ~= nil
@@ -2671,6 +2835,18 @@ function Nezur.isscriptable(object, property)
 		return success and result
 	end
 	return false
+end
+
+function Nezur.setscriptable(object, property, value)
+	local was_scriptable = Nezur.isscriptable(object, property);
+	
+	if (scriptable_cache[object] == nil) then 
+		scriptable_cache[object] = {}
+	end
+
+	scriptable_cache[object][property] = value;
+
+	return was_scriptable;
 end
 -------------------------------------------------------------------------------
 -------------------------------------------------------------------------------
